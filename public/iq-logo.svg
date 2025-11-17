@@ -1,0 +1,29 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Light mode version (will be wrapped in group for dark mode) -->
+  <defs>
+    <style>
+      @media (prefers-color-scheme: dark) {
+        .iq-dark-text { fill: #D4AF37; }
+        .iq-dark-circle { stroke: #D4AF37; }
+      }
+      .iq-light-text { fill: #5C0E14; }
+      .iq-light-circle { stroke: #5C0E14; }
+    </style>
+  </defs>
+  
+  <!-- Decorative circle background -->
+  <circle cx="100" cy="100" r="95" fill="none" class="iq-light-circle" stroke-width="2"/>
+  
+  <!-- IQ Text with modern styling -->
+  <text x="100" y="115" font-family="Arial, sans-serif" font-size="72" font-weight="700" text-anchor="middle" class="iq-light-text" letter-spacing="2">
+    IQ
+  </text>
+  
+  <!-- Accent dots representing intelligence nodes -->
+  <circle cx="65" cy="65" r="5" class="iq-light-text" opacity="0.6"/>
+  <circle cx="135" cy="65" r="5" class="iq-light-text" opacity="0.6"/>
+  <circle cx="100" cy="140" r="5" class="iq-light-text" opacity="0.6"/>
+  
+  <!-- Top accent line representing knowledge flow -->
+  <line x1="60" y1="50" x2="140" y2="50" class="iq-light-circle" stroke-width="2" opacity="0.4"/>
+</svg>

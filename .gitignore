@@ -1,0 +1,85 @@
+# ---------------------------
+# Node / General
+# ---------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+.pnpm-store/
+
+# ---------------------------
+# Environment Files
+# ---------------------------
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+*.env
+
+# ---------------------------
+# Next.js Specific
+# ---------------------------
+.next/
+.next-static/
+out/
+dist/
+# Temporary cache
+.next/cache/
+.vercel/
+
+# Next.js standalone output
+standalone/
+server/
+
+# ---------------------------
+# Express.js Specific
+# ---------------------------
+build/
+dist/
+tmp/
+logs/
+*.log
+
+# ---------------------------
+# Typescript
+# ---------------------------
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# ---------------------------
+# OS / Editor / IDE
+# ---------------------------
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# VSCode
+.vscode/
+.history/
+.idea/
+
+# JetBrains
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# ---------------------------
+# Misc
+# ---------------------------
+coverage/
+.vscode-test/
+.cache/
+.parcel-cache/

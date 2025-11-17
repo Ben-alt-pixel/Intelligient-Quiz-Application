@@ -1,0 +1,5 @@
+export { authService } from "./auth-service"
+export { quizService } from "./quiz-service"
+export { materialService } from "./material-service"
+export { resultService } from "./result-service"
+export { videoService } from "./video-service"
