@@ -13,7 +13,10 @@ interface StudyMaterial {
   title: string;
   description: string;
   content: string;
+  fileUrl?: string;
+  fileType?: string;
   uploadedAt: string;
+  createdAt?: string;
 }
 
 export default function MaterialsPage() {
@@ -30,6 +33,10 @@ export default function MaterialsPage() {
     content: "",
   });
   const [selectedFileName, setSelectedFileName] = useState<string>("");
+  const [ollamaStatus, setOllamaStatus] = useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -45,13 +52,40 @@ export default function MaterialsPage() {
     }
 
     fetchMaterials();
+    checkOllamaStatus();
   }, [router]);
+
+  const checkOllamaStatus = async () => {
+    try {
+      const res = await fetch(
+        `${
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
+        }/ai/questions/test-ollama`
+      );
+      const data = await res.json();
+      setOllamaStatus(data.data);
+    } catch (error) {
+      setOllamaStatus({
+        success: false,
+        message: "Could not connect to AI service",
+      });
+    }
+  };
 
   const fetchMaterials = async () => {
     try {
-      const res = await fetch("/api/lecturer/materials");
-      const data = await res.json();
-      setMaterials(data.materials || []);
+      const response = await fetch(
+        `${
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
+        }/materials`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      const data = await response.json();
+      setMaterials(data.data || []);
     } catch (error) {
       console.error("Error fetching materials:", error);
     } finally {
@@ -62,10 +96,29 @@ export default function MaterialsPage() {
   const handleDelete = async (id: string) => {
     if (confirm("Delete this material?")) {
       try {
-        await fetch(`/api/lecturer/materials/${id}`, { method: "DELETE" });
+        await fetch(
+          `${
+            process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
+          }/materials/${id}`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
         setMaterials(materials.filter((m) => m.id !== id));
+        toast({
+          title: "Success",
+          description: "Material deleted successfully",
+        });
       } catch (error) {
         console.error("Error deleting material:", error);
+        toast({
+          title: "Error",
+          description: "Failed to delete material",
+          variant: "destructive",
+        });
       }
     }
   };
@@ -96,49 +149,17 @@ export default function MaterialsPage() {
     }
 
     setSelectedFileName(file.name);
-    setIsUploading(true);
+    const title = file.name.replace(/\.[^/.]+$/, "");
+    setFormData({
+      title,
+      description: "",
+      content: "",
+    });
+    setShowForm(true);
 
-    try {
-      let content = "";
-
-      if (file.type === "application/pdf") {
-        content = `[PDF Content from ${file.name}]\n\nPlease ensure the PDF content is properly extracted.`;
-      } else if (
-        file.type ===
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-      ) {
-        content = `[DOCX Content from ${file.name}]\n\nPlease ensure the DOCX content is properly extracted.`;
-      } else if (file.type === "text/plain") {
-        const reader = new FileReader();
-        await new Promise((resolve) => {
-          reader.onload = (e) => {
-            content = e.target?.result as string;
-            resolve(null);
-          };
-          reader.readAsText(file);
-        });
-      }
-
-      const title = file.name.replace(/\.[^/.]+$/, "");
-      setFormData({
-        title,
-        description: "",
-        content,
-      });
-      setShowForm(true);
-      setIsUploading(false);
-
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-    } catch (error) {
-      console.error("Error processing file:", error);
-      toast({
-        title: "Error",
-        description: "Error processing file. Please try again.",
-        variant: "destructive",
-      });
-      setIsUploading(false);
+    // Store the file for later upload
+    if (fileInputRef.current) {
+      // Don't clear it yet, we need it for upload
     }
   };
 
@@ -152,33 +173,77 @@ export default function MaterialsPage() {
       return;
     }
 
+    if (!fileInputRef.current?.files?.[0]) {
+      toast({
+        title: "Error",
+        description: "Please select a file",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsUploading(true);
 
     try {
-      const res = await fetch("/api/lecturer/materials", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+      // Create FormData for file upload
+      const formDataToSend = new FormData();
+      formDataToSend.append("file", fileInputRef.current.files[0]);
+      formDataToSend.append("title", formData.title);
+      formDataToSend.append("description", formData.description);
+
+      toast({
+        title: "Processing...",
+        description:
+          "Uploading and extracting text from your document. This may take a moment...",
       });
 
+      const res = await fetch(
+        `${
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
+        }/materials/upload`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: formDataToSend,
+        }
+      );
+
       if (res.ok) {
-        const newMaterial = await res.json();
+        const response = await res.json();
+        const newMaterial = response.data;
         setMaterials([newMaterial, ...materials]);
         setShowForm(false);
         setFormData({ title: "", description: "", content: "" });
         setSelectedFileName("");
+
+        // Clear the file input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+
         toast({
-          title: "Success",
-          description: "Material uploaded successfully",
+          title: "Success! 🎉",
+          description:
+            response.message ||
+            "Material uploaded and text extracted successfully. Ready for AI question generation!",
         });
+
+        // Refresh materials list
+        fetchMaterials();
       } else {
-        throw new Error("Failed to upload material");
+        const errorData = await res.json();
+        throw new Error(
+          errorData.error || errorData.message || "Failed to upload material"
+        );
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error uploading material:", error);
       toast({
         title: "Error",
-        description: "Failed to upload material. Please try again.",
+        description:
+          error.message || "Failed to upload material. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -209,30 +274,48 @@ export default function MaterialsPage() {
 
       {/* Header */}
       <header className="bg-primary text-primary-foreground shadow-lg">
-        <div className="max-w-6xl mx-auto px-4 md:px-8 py-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Study Materials</h1>
-            <p className="text-primary-foreground/80 text-sm mt-1">
-              Upload and manage course materials
-            </p>
-          </div>
-          <div className="flex gap-3 flex-wrap">
-            <Button
-              onClick={handleAddMaterialClick}
-              disabled={isUploading}
-              className="bg-secondary hover:bg-secondary/90 text-secondary-foreground font-semibold"
-            >
-              {isUploading ? "Uploading..." : "Add Material"}
-            </Button>
-            <Link href="/lecturer">
+        <div className="max-w-6xl mx-auto px-4 md:px-8 py-6">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h1 className="text-3xl font-bold">Study Materials</h1>
+              <p className="text-primary-foreground/80 text-sm mt-1">
+                Upload and manage course materials
+              </p>
+            </div>
+            <div className="flex gap-3 flex-wrap">
               <Button
-                variant="outline"
-                className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground/10 bg-transparent"
+                onClick={handleAddMaterialClick}
+                disabled={isUploading}
+                className="bg-secondary hover:bg-secondary/90 text-secondary-foreground font-semibold"
               >
-                Back to Dashboard
+                {isUploading ? "Uploading..." : "Add Material"}
               </Button>
-            </Link>
+              <Link href="/lecturer">
+                <Button
+                  variant="outline"
+                  className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground/10 bg-transparent"
+                >
+                  Back to Dashboard
+                </Button>
+              </Link>
+            </div>
           </div>
+
+          {/* Ollama Status Indicator */}
+          {ollamaStatus && (
+            <div
+              className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                ollamaStatus.success
+                  ? "bg-green-500/20 text-green-100 border border-green-400"
+                  : "bg-yellow-500/20 text-yellow-100 border border-yellow-400"
+              }`}
+            >
+              <span className="mr-2">{ollamaStatus.success ? "🤖" : "⚠️"}</span>
+              {ollamaStatus.success
+                ? "AI Ready - Ollama Connected"
+                : "AI Offline - Questions will use fallback"}
+            </div>
+          )}
         </div>
       </header>
 
@@ -325,15 +408,35 @@ export default function MaterialsPage() {
                 className="border-2 border-border hover:border-primary/50 transition-all"
               >
                 <div className="p-6">
-                  <h3 className="text-xl font-bold text-foreground mb-2 line-clamp-2">
-                    {material.title}
-                  </h3>
-                  <p className="text-muted-foreground text-sm mb-4 line-clamp-3">
-                    {material.description}
+                  <div className="flex items-start justify-between mb-2">
+                    <h3 className="text-xl font-bold text-foreground line-clamp-2 flex-1">
+                      {material.title}
+                    </h3>
+                    {material.fileType && (
+                      <span className="ml-2 px-2 py-1 text-xs font-semibold bg-primary/10 text-primary rounded">
+                        {material.fileType.toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-muted-foreground text-sm mb-3 line-clamp-3">
+                    {material.description || "No description provided"}
                   </p>
+
+                  {material.content && (
+                    <div className="mb-3 p-2 bg-green-50 dark:bg-green-900/20 rounded border border-green-200 dark:border-green-800">
+                      <p className="text-xs text-green-700 dark:text-green-300 flex items-center">
+                        <span className="mr-1">✓</span>
+                        Text extracted ({material.content.length} characters) -
+                        Ready for AI!
+                      </p>
+                    </div>
+                  )}
+
                   <p className="text-xs text-muted-foreground mb-4">
                     Uploaded:{" "}
-                    {new Date(material.uploadedAt).toLocaleDateString()}
+                    {new Date(
+                      material.uploadedAt || material.createdAt || ""
+                    ).toLocaleDateString()}
                   </p>
 
                   <div className="space-y-2">
@@ -345,7 +448,7 @@ export default function MaterialsPage() {
                         size="sm"
                         className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground"
                       >
-                        Generate Questions
+                        🤖 Generate AI Questions
                       </Button>
                     </Link>
                     <Button

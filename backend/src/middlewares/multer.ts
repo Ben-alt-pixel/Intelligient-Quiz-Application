@@ -14,6 +14,12 @@ if (!fs.existsSync(videosDir)) {
   fs.mkdirSync(videosDir, { recursive: true });
 }
 
+// Ensure materials directory exists
+const materialsDir = path.join(env.UPLOAD_DIR, "materials");
+if (!fs.existsSync(materialsDir)) {
+  fs.mkdirSync(materialsDir, { recursive: true });
+}
+
 // Storage configuration for files
 const fileStorage = multer.diskStorage({
   destination: (req, file, cb) => {

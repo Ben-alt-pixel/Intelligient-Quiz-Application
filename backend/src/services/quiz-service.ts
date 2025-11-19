@@ -137,12 +137,12 @@ export class QuizService {
     return quiz;
   }
 
-  static async publishQuiz(id: string) {
-    return await prisma.quiz.update({
-      where: { id },
-      data: { isPublished: true },
-    });
-  }
+  // static async publishQuiz(id: string) {
+  //   return await prisma.quiz.update({
+  //     where: { id },
+  //     data: { isPublished: true },
+  //   });
+  // }
 
   static async deleteQuiz(id: string) {
     return await prisma.quiz.delete({

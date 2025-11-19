@@ -61,6 +61,34 @@ class ApiClient {
   async delete<T>(endpoint: string): Promise<T> {
     return this.request<T>("DELETE", endpoint);
   }
+
+  /**
+   * Upload files using FormData
+   */
+  async uploadFile<T>(endpoint: string, formData: FormData): Promise<T> {
+    const headers: HeadersInit = {};
+
+    if (typeof window !== "undefined") {
+      const runtimeToken = localStorage.getItem("token");
+      if (runtimeToken) {
+        headers["Authorization"] = `Bearer ${runtimeToken}`;
+      }
+    }
+
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: "POST",
+      headers,
+      body: formData,
+    });
+
+    const data: ApiResponse<T> = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.error || data.message || "Upload failed");
+    }
+
+    return data.data as T;
+  }
 }
 
 export const apiClient = new ApiClient();

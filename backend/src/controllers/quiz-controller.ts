@@ -81,20 +81,20 @@ export class QuizController {
     }
   }
 
-  static async publishQuiz(
-    req: AuthRequest,
-    res: Response,
-    next: NextFunction
-  ) {
-    try {
-      const quiz = await QuizService.publishQuiz(req.params.id);
-      res
-        .status(200)
-        .json(formatResponse(true, quiz, "Quiz published successfully"));
-    } catch (error: any) {
-      next(error);
-    }
-  }
+  // static async publishQuiz(
+  //   req: AuthRequest,
+  //   res: Response,
+  //   next: NextFunction
+  // ) {
+  //   try {
+  //     const quiz = await QuizService.publishQuiz(req.params.id);
+  //     res
+  //       .status(200)
+  //       .json(formatResponse(true, quiz, "Quiz published successfully"));
+  //   } catch (error: any) {
+  //     next(error);
+  //   }
+  // }
 
   static async deleteQuiz(req: AuthRequest, res: Response, next: NextFunction) {
     try {
