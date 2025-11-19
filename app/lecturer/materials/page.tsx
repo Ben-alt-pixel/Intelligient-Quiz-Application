@@ -1,144 +1,146 @@
-"use client"
+"use client";
 
-import { useEffect, useRef, useState } from "react"
-import { useRouter } from 'next/navigation'
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { useToast } from "@/hooks/use-toast"
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 
 interface StudyMaterial {
-  id: string
-  title: string
-  description: string
-  content: string
-  uploadedAt: string
+  id: string;
+  title: string;
+  description: string;
+  content: string;
+  uploadedAt: string;
 }
 
 export default function MaterialsPage() {
-  const router = useRouter()
-  const { toast } = useToast()
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const [materials, setMaterials] = useState<StudyMaterial[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [isUploading, setIsUploading] = useState(false)
-  const [showForm, setShowForm] = useState(false)
+  const router = useRouter();
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [materials, setMaterials] = useState<StudyMaterial[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isUploading, setIsUploading] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     content: "",
-  })
-  const [selectedFileName, setSelectedFileName] = useState<string>("")
+  });
+  const [selectedFileName, setSelectedFileName] = useState<string>("");
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user")
+    const storedUser = localStorage.getItem("user");
     if (!storedUser) {
-      router.push("/login")
-      return
+      router.push("/login");
+      return;
     }
 
-    const parsedUser = JSON.parse(storedUser)
+    const parsedUser = JSON.parse(storedUser);
     if (parsedUser.role !== "LECTURER") {
-      router.push("/")
-      return
+      router.push("/");
+      return;
     }
 
-    fetchMaterials()
-  }, [router])
+    fetchMaterials();
+  }, [router]);
 
   const fetchMaterials = async () => {
     try {
-      const res = await fetch("/api/lecturer/materials")
-      const data = await res.json()
-      setMaterials(data.materials || [])
+      const res = await fetch("/api/lecturer/materials");
+      const data = await res.json();
+      setMaterials(data.materials || []);
     } catch (error) {
-      console.error("Error fetching materials:", error)
+      console.error("Error fetching materials:", error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleDelete = async (id: string) => {
     if (confirm("Delete this material?")) {
       try {
-        await fetch(`/api/lecturer/materials/${id}`, { method: "DELETE" })
-        setMaterials(materials.filter((m) => m.id !== id))
+        await fetch(`/api/lecturer/materials/${id}`, { method: "DELETE" });
+        setMaterials(materials.filter((m) => m.id !== id));
       } catch (error) {
-        console.error("Error deleting material:", error)
+        console.error("Error deleting material:", error);
       }
     }
-  }
+  };
 
   const handleAddMaterialClick = () => {
-    fileInputRef.current?.click()
-  }
+    fileInputRef.current?.click();
+  };
 
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
     const allowedTypes = [
       "application/pdf",
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       "text/plain",
-    ]
+    ];
 
     if (!allowedTypes.includes(file.type)) {
       toast({
         title: "Invalid file type",
         description: "Please select a PDF, Word document, or TXT file",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    setSelectedFileName(file.name)
-    setIsUploading(true)
+    setSelectedFileName(file.name);
+    setIsUploading(true);
 
     try {
-      let content = ""
+      let content = "";
 
       if (file.type === "application/pdf") {
-        content = `[PDF Content from ${file.name}]\n\nPlease ensure the PDF content is properly extracted.`
+        content = `[PDF Content from ${file.name}]\n\nPlease ensure the PDF content is properly extracted.`;
       } else if (
         file.type ===
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
       ) {
-        content = `[DOCX Content from ${file.name}]\n\nPlease ensure the DOCX content is properly extracted.`
+        content = `[DOCX Content from ${file.name}]\n\nPlease ensure the DOCX content is properly extracted.`;
       } else if (file.type === "text/plain") {
-        const reader = new FileReader()
+        const reader = new FileReader();
         await new Promise((resolve) => {
           reader.onload = (e) => {
-            content = e.target?.result as string
-            resolve(null)
-          }
-          reader.readAsText(file)
-        })
+            content = e.target?.result as string;
+            resolve(null);
+          };
+          reader.readAsText(file);
+        });
       }
 
-      const title = file.name.replace(/\.[^/.]+$/, "")
+      const title = file.name.replace(/\.[^/.]+$/, "");
       setFormData({
         title,
         description: "",
         content,
-      })
-      setShowForm(true)
-      setIsUploading(false)
+      });
+      setShowForm(true);
+      setIsUploading(false);
 
       if (fileInputRef.current) {
-        fileInputRef.current.value = ""
+        fileInputRef.current.value = "";
       }
     } catch (error) {
-      console.error("Error processing file:", error)
+      console.error("Error processing file:", error);
       toast({
         title: "Error",
         description: "Error processing file. Please try again.",
         variant: "destructive",
-      })
-      setIsUploading(false)
+      });
+      setIsUploading(false);
     }
-  }
+  };
 
   const handleSubmitMaterial = async () => {
     if (!formData.title.trim()) {
@@ -146,56 +148,56 @@ export default function MaterialsPage() {
         title: "Error",
         description: "Please enter a title",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    setIsUploading(true)
+    setIsUploading(true);
 
     try {
       const res = await fetch("/api/lecturer/materials", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
-      })
+      });
 
       if (res.ok) {
-        const newMaterial = await res.json()
-        setMaterials([newMaterial, ...materials])
-        setShowForm(false)
-        setFormData({ title: "", description: "", content: "" })
-        setSelectedFileName("")
+        const newMaterial = await res.json();
+        setMaterials([newMaterial, ...materials]);
+        setShowForm(false);
+        setFormData({ title: "", description: "", content: "" });
+        setSelectedFileName("");
         toast({
           title: "Success",
           description: "Material uploaded successfully",
-        })
+        });
       } else {
-        throw new Error("Failed to upload material")
+        throw new Error("Failed to upload material");
       }
     } catch (error) {
-      console.error("Error uploading material:", error)
+      console.error("Error uploading material:", error);
       toast({
         title: "Error",
         description: "Failed to upload material. Please try again.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsUploading(false)
+      setIsUploading(false);
     }
-  }
+  };
 
   if (isLoading) {
     return (
-      <main className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 p-4 md:p-8">
+      <main className="min-h-screen bg-linear-to-br from-primary/5 to-secondary/5 p-4 md:p-8">
         <div className="max-w-6xl mx-auto text-center py-12">
           <p className="text-muted-foreground">Loading materials...</p>
         </div>
       </main>
-    )
+    );
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5">
+    <main className="min-h-screen bg-linear-to-br from-primary/5 to-secondary/5">
       <input
         ref={fileInputRef}
         type="file"
@@ -210,7 +212,9 @@ export default function MaterialsPage() {
         <div className="max-w-6xl mx-auto px-4 md:px-8 py-6 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Study Materials</h1>
-            <p className="text-primary-foreground/80 text-sm mt-1">Upload and manage course materials</p>
+            <p className="text-primary-foreground/80 text-sm mt-1">
+              Upload and manage course materials
+            </p>
           </div>
           <div className="flex gap-3 flex-wrap">
             <Button
@@ -236,7 +240,9 @@ export default function MaterialsPage() {
       <div className="max-w-6xl mx-auto px-4 md:px-8 py-12">
         {showForm && (
           <Card className="mb-8 p-6 border-2 border-primary/50 bg-primary/5">
-            <h2 className="text-2xl font-bold text-foreground mb-6">Upload Material</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-6">
+              Upload Material
+            </h2>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-foreground mb-2">
@@ -244,7 +250,9 @@ export default function MaterialsPage() {
                 </label>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-foreground mb-2">Title *</label>
+                <label className="block text-sm font-semibold text-foreground mb-2">
+                  Title *
+                </label>
                 <Input
                   value={formData.title}
                   onChange={(e) =>
@@ -279,9 +287,9 @@ export default function MaterialsPage() {
                 </Button>
                 <Button
                   onClick={() => {
-                    setShowForm(false)
-                    setFormData({ title: "", description: "", content: "" })
-                    setSelectedFileName("")
+                    setShowForm(false);
+                    setFormData({ title: "", description: "", content: "" });
+                    setSelectedFileName("");
                   }}
                   disabled={isUploading}
                   variant="outline"
@@ -296,8 +304,12 @@ export default function MaterialsPage() {
 
         {materials.length === 0 ? (
           <Card className="p-12 text-center border-2 border-dashed border-border">
-            <h3 className="text-lg font-semibold text-foreground mb-2">No Materials Yet</h3>
-            <p className="text-muted-foreground mb-6">Upload study materials to generate AI questions.</p>
+            <h3 className="text-lg font-semibold text-foreground mb-2">
+              No Materials Yet
+            </h3>
+            <p className="text-muted-foreground mb-6">
+              Upload study materials to generate AI questions.
+            </p>
             <Button
               onClick={handleAddMaterialClick}
               className="bg-primary hover:bg-primary/90 text-primary-foreground"
@@ -308,17 +320,31 @@ export default function MaterialsPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {materials.map((material) => (
-              <Card key={material.id} className="border-2 border-border hover:border-primary/50 transition-all">
+              <Card
+                key={material.id}
+                className="border-2 border-border hover:border-primary/50 transition-all"
+              >
                 <div className="p-6">
-                  <h3 className="text-xl font-bold text-foreground mb-2 line-clamp-2">{material.title}</h3>
-                  <p className="text-muted-foreground text-sm mb-4 line-clamp-3">{material.description}</p>
+                  <h3 className="text-xl font-bold text-foreground mb-2 line-clamp-2">
+                    {material.title}
+                  </h3>
+                  <p className="text-muted-foreground text-sm mb-4 line-clamp-3">
+                    {material.description}
+                  </p>
                   <p className="text-xs text-muted-foreground mb-4">
-                    Uploaded: {new Date(material.uploadedAt).toLocaleDateString()}
+                    Uploaded:{" "}
+                    {new Date(material.uploadedAt).toLocaleDateString()}
                   </p>
 
                   <div className="space-y-2">
-                    <Link href={`/lecturer/ai-questions/generate?materialId=${material.id}`} className="w-full block">
-                      <Button size="sm" className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground">
+                    <Link
+                      href={`/lecturer/ai-questions/generate?materialId=${material.id}`}
+                      className="w-full block"
+                    >
+                      <Button
+                        size="sm"
+                        className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+                      >
                         Generate Questions
                       </Button>
                     </Link>
@@ -338,5 +364,5 @@ export default function MaterialsPage() {
         )}
       </div>
     </main>
-  )
+  );
 }

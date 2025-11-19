@@ -1,43 +1,54 @@
-import { apiClient } from "@/lib/api-client"
+import { apiClient } from "@/lib/api-client";
 
 export const quizService = {
   async getPublishedQuizzes() {
-    return apiClient.get("/quizzes/published")
+    return apiClient.get("/quizzes/published");
   },
 
   async getMyQuizzes() {
-    return apiClient.get("/quizzes/my-quizzes")
+    return apiClient.get("/quizzes/my-quizzes");
   },
 
+  async answerQuestion(data: {
+    questionId: string;
+    answer: string;
+    sessionId: string;
+  }) {
+    return apiClient.post("/quizzes/answer", {
+      questionId: data.questionId,
+      selectedAnswer: data.answer,
+      sessionId: data.sessionId,
+    });
+  },
   async getQuizById(id: string) {
-    return apiClient.get(`/quizzes/${id}`)
+    return apiClient.get(`/quizzes/${id}`);
   },
 
   async createQuiz(data: any) {
-    return apiClient.post("/quizzes", data)
+    return apiClient.post("/quizzes", data);
   },
 
   async updateQuiz(id: string, data: any) {
-    return apiClient.patch(`/quizzes/${id}`, data)
+    return apiClient.patch(`/quizzes/${id}`, data);
   },
 
   async publishQuiz(id: string) {
-    return apiClient.patch(`/quizzes/${id}/publish`, {})
+    return apiClient.patch(`/quizzes/${id}/publish`, {});
   },
 
   async deleteQuiz(id: string) {
-    return apiClient.delete(`/quizzes/${id}`)
+    return apiClient.delete(`/quizzes/${id}`);
   },
 
   async startSession(quizId: string) {
-    return apiClient.post("/quizzes/session/start", { quizId })
+    return apiClient.post("/quizzes/session/start", { quizId });
   },
 
   async getSession(id: string) {
-    return apiClient.get(`/quizzes/session/${id}`)
+    return apiClient.get(`/quizzes/session/${id}`);
   },
 
   async submitSession(id: string) {
-    return apiClient.post(`/quizzes/session/${id}/submit`, {})
+    return apiClient.post(`/quizzes/session/${id}/submit`, {});
   },
-}
+};

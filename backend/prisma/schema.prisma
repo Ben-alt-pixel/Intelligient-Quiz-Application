@@ -152,6 +152,7 @@ model StudentAnswer {
   quizSession   QuizSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   student       User         @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
+  @@unique([questionId, sessionId, studentId])
   @@index([questionId])
   @@index([sessionId])
   @@index([studentId])

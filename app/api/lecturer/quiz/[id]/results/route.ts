@@ -1,29 +1,32 @@
-import { type NextRequest, NextResponse } from "next/server"
+import { type NextRequest, NextResponse } from "next/server";
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
 
-  // Mock results data
-  const mockResults = [
-    {
-      studentName: "Alice Johnson",
-      score: 8,
-      totalQuestions: 10,
-      completedAt: "2024-11-10T14:30:00Z",
-    },
-    {
-      studentName: "Bob Smith",
-      score: 7,
-      totalQuestions: 10,
-      completedAt: "2024-11-11T09:15:00Z",
-    },
-    {
-      studentName: "Carol Williams",
-      score: 9,
-      totalQuestions: 10,
-      completedAt: "2024-11-11T16:45:00Z",
-    },
-  ]
+  try {
+    // Call the backend API to get quiz results
+    const backendUrl =
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+    const response = await fetch(`${backendUrl}/results/quiz/${id}`, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
-  return NextResponse.json({ results: mockResults })
+    if (!response.ok) {
+      throw new Error("Failed to fetch results from backend");
+    }
+
+    const data = await response.json();
+    return NextResponse.json({ results: data.data });
+  } catch (error) {
+    console.error("Error fetching quiz results:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch results" },
+      { status: 500 }
+    );
+  }
 }
