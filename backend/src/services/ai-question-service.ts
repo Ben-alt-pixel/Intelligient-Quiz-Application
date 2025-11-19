@@ -64,20 +64,40 @@ export class AIQuestionService {
 
     // 4. Save all questions to database
     const questions = await Promise.all(
-      generatedQuestions.map((q) =>
-        prisma.question.create({
+      generatedQuestions.map((q) => {
+        // Ensure options is properly formatted
+        let optionsJson: string;
+        if (typeof q.options === "string") {
+          optionsJson = q.options;
+        } else if (Array.isArray(q.options)) {
+          optionsJson = JSON.stringify(q.options);
+        } else {
+          optionsJson = "[]";
+        }
+
+        // Ensure correctAnswer is a number
+        let correctAnswerIndex: number;
+        if (typeof q.correctAnswer === "number") {
+          correctAnswerIndex = q.correctAnswer;
+        } else if (typeof q.correctAnswer === "string") {
+          correctAnswerIndex = parseInt(q.correctAnswer) || 0;
+        } else {
+          correctAnswerIndex = 0;
+        }
+
+        return prisma.question.create({
           data: {
             text: q.text || "",
             type: q.type || "MCQ",
-            options: q.options || "[]",
-            correctAnswer: q.correctAnswer || "",
+            options: optionsJson,
+            correctAnswer: correctAnswerIndex,
             difficulty: q.difficulty || validatedData.difficulty,
             explanation: q.explanation,
             quizId: quiz.id,
             materialId: validatedData.materialId,
           },
-        })
-      )
+        });
+      })
     );
 
     return {
@@ -112,20 +132,40 @@ export class AIQuestionService {
 
     // Save generated questions to database
     const questions = await Promise.all(
-      generatedQuestions.map((q) =>
-        prisma.question.create({
+      generatedQuestions.map((q) => {
+        // Ensure options is properly formatted
+        let optionsJson: string;
+        if (typeof q.options === "string") {
+          optionsJson = q.options;
+        } else if (Array.isArray(q.options)) {
+          optionsJson = JSON.stringify(q.options);
+        } else {
+          optionsJson = "[]";
+        }
+
+        // Ensure correctAnswer is a number
+        let correctAnswerIndex: number;
+        if (typeof q.correctAnswer === "number") {
+          correctAnswerIndex = q.correctAnswer;
+        } else if (typeof q.correctAnswer === "string") {
+          correctAnswerIndex = parseInt(q.correctAnswer) || 0;
+        } else {
+          correctAnswerIndex = 0;
+        }
+
+        return prisma.question.create({
           data: {
             text: q.text || "",
             type: q.type || "MCQ",
-            options: q.options || "[]",
-            correctAnswer: q.correctAnswer || "",
+            options: optionsJson,
+            correctAnswer: correctAnswerIndex,
             difficulty: q.difficulty || "MEDIUM",
             explanation: q.explanation,
             quizId: data.quizId,
             materialId: data.materialId,
           },
-        })
-      )
+        });
+      })
     );
 
     return questions;
