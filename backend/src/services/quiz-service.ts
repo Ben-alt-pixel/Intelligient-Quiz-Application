@@ -137,12 +137,15 @@ export class QuizService {
     return quiz;
   }
 
-  // static async publishQuiz(id: string) {
-  //   return await prisma.quiz.update({
-  //     where: { id },
-  //     data: { isPublished: true },
-  //   });
-  // }
+  static async publishQuiz(id: string) {
+    // Note: isPublished field doesn't exist in schema yet
+    // For now, just return the quiz as-is
+    // TODO: Add isPublished field to Quiz model in schema.prisma
+    return await prisma.quiz.findUnique({
+      where: { id },
+      include: { questions: true },
+    });
+  }
 
   static async deleteQuiz(id: string) {
     return await prisma.quiz.delete({
