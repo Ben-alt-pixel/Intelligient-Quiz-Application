@@ -7,6 +7,15 @@ const router = Router();
 // Test endpoint - check if Ollama is working
 router.get("/test-ollama", AIQuestionController.testOllama);
 
+// Auto-generate quiz and questions from material (NEW SIMPLIFIED FLOW)
+router.post(
+  "/auto-generate",
+  authMiddleware,
+  roleMiddleware(["LECTURER"]),
+  AIQuestionController.autoGenerateQuizFromMaterial
+);
+
+// Original generate endpoint (for manual quiz creation)
 router.post(
   "/generate",
   authMiddleware,

@@ -293,4 +293,19 @@ export class QuizService {
 
     return videoSubmission;
   }
+
+  static async updateQuestion(
+    questionId: string,
+    data: {
+      text?: string;
+      options?: string;
+      correctAnswer?: number;
+      explanation?: string;
+    }
+  ) {
+    return await prisma.question.update({
+      where: { id: questionId },
+      data,
+    });
+  }
 }

@@ -36,6 +36,12 @@ router.patch(
   roleMiddleware(["LECTURER"]),
   QuizController.publishQuiz
 );
+router.patch(
+  "/questions/:id",
+  authMiddleware,
+  roleMiddleware(["LECTURER"]),
+  QuizController.updateQuestion
+);
 router.delete(
   "/:id",
   authMiddleware,

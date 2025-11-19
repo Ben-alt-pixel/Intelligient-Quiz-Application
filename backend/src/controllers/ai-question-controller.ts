@@ -4,6 +4,34 @@ import { formatResponse, formatError } from "@/utils/response-formatter";
 import { ollamaService } from "@/services/ollama-question-service";
 
 export class AIQuestionController {
+  /**
+   * Auto-generate quiz and questions from uploaded material
+   * POST /api/ai/questions/auto-generate
+   */
+  static async autoGenerateQuizFromMaterial(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const result = await AIQuestionService.autoGenerateQuizFromMaterial(
+        req.body
+      );
+      res
+        .status(201)
+        .json(
+          formatResponse(
+            true,
+            result,
+            "Quiz and questions generated successfully! 🎉",
+            201
+          )
+        );
+    } catch (error: any) {
+      next(error);
+    }
+  }
+
   static async generateQuestions(
     req: Request,
     res: Response,

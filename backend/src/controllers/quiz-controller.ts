@@ -107,6 +107,24 @@ export class QuizController {
     }
   }
 
+  static async updateQuestion(
+    req: AuthRequest,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const question = await QuizService.updateQuestion(
+        req.params.id,
+        req.body
+      );
+      res
+        .status(200)
+        .json(formatResponse(true, question, "Question updated successfully"));
+    } catch (error: any) {
+      next(error);
+    }
+  }
+
   static async startQuizSession(
     req: AuthRequest,
     res: Response,

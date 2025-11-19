@@ -37,6 +37,9 @@ export default function MaterialsPage() {
     success: boolean;
     message: string;
   } | null>(null);
+  const [generatingQuizFor, setGeneratingQuizFor] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -90,6 +93,73 @@ export default function MaterialsPage() {
       console.error("Error fetching materials:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleAutoGenerateQuiz = async (materialId: string) => {
+    if (!confirm("Generate a quiz with AI questions from this material?")) {
+      return;
+    }
+
+    setGeneratingQuizFor(materialId);
+
+    try {
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+      toast({
+        title: "🤖 Generating Quiz...",
+        description:
+          "AI is analyzing your material and creating questions. This may take a minute...",
+      });
+
+      const response = await fetch(
+        `${
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
+        }/ai/questions/auto-generate`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({
+            materialId,
+            lecturerId: user.id,
+            numberOfQuestions: 10,
+            difficulty: "MEDIUM",
+            duration: 30,
+            passingScore: 70,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to generate quiz");
+      }
+
+      const result = await response.json();
+      const { quiz, questions } = result.data;
+
+      toast({
+        title: "Success! 🎉",
+        description: `Quiz created with ${questions.length} questions. Redirecting...`,
+      });
+
+      // Redirect to quiz edit page after 2 seconds
+      setTimeout(() => {
+        router.push(`/lecturer/quiz/${quiz.id}/edit`);
+      }, 2000);
+    } catch (error: any) {
+      console.error("Error generating quiz:", error);
+      toast({
+        title: "Error",
+        description:
+          error.message || "Failed to generate quiz. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setGeneratingQuizFor(null);
     }
   };
 
@@ -440,15 +510,32 @@ export default function MaterialsPage() {
                   </p>
 
                   <div className="space-y-2">
+                    <Button
+                      size="sm"
+                      className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground font-semibold"
+                      onClick={() => handleAutoGenerateQuiz(material.id)}
+                      disabled={
+                        generatingQuizFor === material.id ||
+                        !material.content ||
+                        material.content.trim().length === 0
+                      }
+                    >
+                      {generatingQuizFor === material.id ? (
+                        <>🔄 Generating Quiz...</>
+                      ) : (
+                        <>🚀 Auto-Generate Quiz</>
+                      )}
+                    </Button>
                     <Link
                       href={`/lecturer/ai-questions/generate?materialId=${material.id}`}
                       className="w-full block"
                     >
                       <Button
                         size="sm"
-                        className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+                        variant="outline"
+                        className="w-full border-border text-foreground hover:bg-muted"
                       >
-                        🤖 Generate AI Questions
+                        ⚙️ Advanced Options
                       </Button>
                     </Link>
                     <Button
