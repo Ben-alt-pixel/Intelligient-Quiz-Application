@@ -41,7 +41,7 @@ export default function GenerateQuestionsPage() {
     }
 
     const parsedUser = JSON.parse(storedUser);
-    if (parsedUser.role !== "lecturer") {
+    if (parsedUser.role !== "LECTURER") {
       router.push("/");
       return;
     }

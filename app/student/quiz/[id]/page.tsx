@@ -493,7 +493,19 @@ export default function TakeQuizPage() {
   }
 
   const question = quiz.questions[currentQuestion];
-  const progress = ((currentQuestion + 1) / quiz.questions.length) * 100;
+let parsedOptions: string[] = [];
+
+try {
+  if (Array.isArray(question?.options)) {
+    parsedOptions = question.options;
+  } else if (typeof question?.options === "string") {
+    parsedOptions = JSON.parse(question.options);
+  }
+} catch (error) {
+  console.error("Invalid options format:", error);
+  parsedOptions = [];
+}  
+const progress = ((currentQuestion + 1) / quiz.questions.length) * 100;
 
   return (
     <main className="min-h-screen bg-linear-to-br from-primary/5 to-secondary/5 p-4 md:p-8">
@@ -558,7 +570,7 @@ export default function TakeQuizPage() {
           </h2>
 
           <div className="space-y-3">
-            {question.options?.map((option: string, index: number) => (
+            {parsedOptions?.map((option: string, index: number) => (
               <label
                 key={index}
                 className={`flex items-center p-4 rounded-lg border-2 cursor-pointer transition-all ${

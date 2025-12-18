@@ -13,7 +13,7 @@ const GenerateQuestionsSchema = z.object({
 const AutoGenerateSchema = z.object({
   materialId: z.string(),
   lecturerId: z.string(),
-  numberOfQuestions: z.number().min(1).max(20).default(10),
+  numberOfQuestions: z.number().min(1).max(20).default(4),
   difficulty: z.enum(["EASY", "MEDIUM", "HARD"]).default("MEDIUM"),
   duration: z.number().min(1).default(30), // Default 30 minutes
   passingScore: z.number().min(0).max(100).default(70), // Default 70%
